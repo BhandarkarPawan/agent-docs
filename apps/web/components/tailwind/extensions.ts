@@ -1,3 +1,4 @@
+import Comment from "@/extensions/Comment";
 import {
   AIHighlight,
   CharacterCount,
@@ -122,6 +123,12 @@ const youtube = Youtube.configure({
   inline: false,
 });
 
+const comment = Comment.configure({
+  HTMLAttributes: {
+    class: cx("bg-yellow-400 bg-opacity-50"),
+  },
+});
+
 const characterCount = CharacterCount.configure();
 
 export const defaultExtensions = [
@@ -138,4 +145,5 @@ export const defaultExtensions = [
   youtube,
   characterCount,
   GlobalDragHandle,
+  comment,
 ];

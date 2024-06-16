@@ -29,6 +29,9 @@
         "noUnusedImports": "warn",
         "noUnusedVariables": "warn"
       },
+      "suspicious": {
+        "noExplicitAny": "off"
+      },
       "style": {
         "noParameterAssign": "off"
       }
