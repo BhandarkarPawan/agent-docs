@@ -81,19 +81,37 @@ const TailwindAdvancedEditor = () => {
     const content = window.localStorage.getItem("novel-content");
     if (content) setInitialContent(JSON.parse(content));
     else setInitialContent(defaultEditorContent);
+
+    const comments = window.localStorage.getItem("comments");
+    if (comments) setComments(JSON.parse(comments));
+    else setComments([]);
   }, []);
 
   if (!initialContent) return null;
 
-  const addComment = (content: string) => {
+  const addComment = () => {
     setComments([
       ...comments,
       {
         id: uuidv4(),
-        content,
+        content: "This is a comment",
         createdAt: new Date().toISOString(),
       },
     ]);
+  };
+
+  const updateComments = (id: string, content: string) => {
+    const newComments = comments.map((comment) => {
+      if (comment.id === id) {
+        return {
+          ...comment,
+          content: content,
+        };
+      }
+      return comment;
+    });
+    setComments(newComments);
+    window.localStorage.setItem("comments", JSON.stringify(newComments));
   };
 
   return (
@@ -178,7 +196,7 @@ const TailwindAdvancedEditor = () => {
           </EditorContent>
         </EditorRoot>
       </div>
-      <Comments comments={comments} />
+      <Comments comments={comments} updateComments={updateComments} />
     </div>
   );
 };

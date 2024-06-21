@@ -4,7 +4,7 @@ import { MessageSquarePlus } from "lucide-react";
 import { EditorBubbleItem, type EditorInstance, useEditor } from "novel";
 
 type CommentSelectorOptions = {
-  onAddComment: (content: string) => void;
+  onAddComment: () => void;
 };
 
 const CommentSelector = ({ onAddComment }: CommentSelectorOptions) => {
@@ -15,7 +15,7 @@ const CommentSelector = ({ onAddComment }: CommentSelectorOptions) => {
     console.log("Adds comment with id: ", commentId);
     console.log("editor: ", editor.chain().focus());
     editor.chain().focus().setComment(commentId).run();
-    onAddComment("");
+    onAddComment();
   };
 
   return (

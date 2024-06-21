@@ -1,6 +1,5 @@
 import useOnClickOutside from "@/hooks/use-on-click-outside";
 import { useCompletion } from "ai/react";
-import { useEditor } from "novel";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -10,11 +9,15 @@ export type Comment = {
   createdAt: string;
 };
 
-const CommentDisplay = ({ comment }: { comment: Comment }) => {
-  const { editor } = useEditor();
+type CommentDisplayProps = {
+  comment: Comment;
+  onChange: (content: string) => void;
+};
+
+const CommentDisplay = ({ comment, onChange }: CommentDisplayProps) => {
   const ref = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState(comment.content);
-  const [editing, setEditing] = useState(true);
+  const [editing, setEditing] = useState(false);
 
   const { completion, complete, isLoading } = useCompletion({
     // id: "novel",
@@ -29,6 +32,10 @@ const CommentDisplay = ({ comment }: { comment: Comment }) => {
       toast.error(e.message);
     },
   });
+
+  useEffect(() => {
+    onChange(inputValue);
+  }, [inputValue]);
 
   const startEditing = () => setEditing(true);
   const stopEditing = () => setEditing(false);
@@ -62,13 +69,18 @@ const CommentDisplay = ({ comment }: { comment: Comment }) => {
 
 type CommentsOptions = {
   comments: Comment[];
+  updateComments: (id: string, content: string) => void;
 };
 
-const Comments = ({ comments }: CommentsOptions) => {
+const Comments = ({ comments, updateComments }: CommentsOptions) => {
   return (
     <div className="space-y-4 sticky top-0 py-2 ">
       {comments.map((comment) => (
-        <CommentDisplay key={comment.id} comment={comment} />
+        <CommentDisplay
+          onChange={(content) => updateComments(comment.id, content)}
+          key={comment.id}
+          comment={comment}
+        />
       ))}
     </div>
   );
