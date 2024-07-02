@@ -70,10 +70,13 @@ const TailwindAdvancedEditor = () => {
         "markdown",
         editor.storage.markdown.getMarkdown(),
       );
-      setSaveStatus("Saved");
     },
     500,
   );
+
+  const debouncedCommentSave = useDebouncedCallback(async () => {
+    window.localStorage.setItem("comments", JSON.stringify(comments));
+  }, 500);
 
   useEffect(() => {
     const content = window.localStorage.getItem("novel-content");
@@ -86,7 +89,7 @@ const TailwindAdvancedEditor = () => {
   }, []);
 
   useEffect(() => {
-    window.localStorage.setItem("comments", JSON.stringify(comments));
+    debouncedCommentSave();
   }, [comments]);
 
   if (!initialContent) return null;
