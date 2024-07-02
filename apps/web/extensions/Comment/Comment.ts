@@ -22,7 +22,15 @@ declare module "@tiptap/core" {
 const CommentExtension = Mark.create({
   name: "comment",
 
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+      onCommentActivated: () => {},
+    };
+  },
+
   renderHTML({ HTMLAttributes }) {
+    console.log("foo: ", this.options.HTMLAttributes, "bar: ", HTMLAttributes);
     return ["span", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0];
   },
 
@@ -40,12 +48,18 @@ const CommentExtension = Mark.create({
     };
   },
 
+  onSelectionUpdate() {
+    const { $from } = this.editor.view.state.selection;
+    const commentMark = $from.marks().find((mark) => mark.type === this.type);
+    if (!commentMark) return;
+    this.options.onCommentActivated(commentMark.attrs.commentId);
+  },
+
   addCommands() {
     return {
       setComment:
         (attributes) =>
         ({ chain }) => {
-          console.log("adding comment with attributes", attributes);
           return chain().setMark(this.name, attributes).run();
         },
       toggleComment:

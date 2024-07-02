@@ -1,5 +1,6 @@
 "use client";
 import { defaultEditorContent } from "@/lib/content";
+import { cx } from "class-variance-authority";
 import {
   EditorCommand,
   EditorCommandEmpty,
@@ -19,6 +20,7 @@ import { LinkSelector } from "./selectors/link-selector";
 import { NodeSelector } from "./selectors/node-selector";
 import { Separator } from "./ui/separator";
 
+import CommentExtension from "@/extensions/Comment";
 import { handleImageDrop, handleImagePaste } from "novel/plugins";
 import Comments from "./comments";
 import type { Comment } from "./comments";
@@ -29,8 +31,6 @@ import { TextButtons } from "./selectors/text-buttons";
 import { slashCommand, suggestionItems } from "./slash-command";
 
 const hljs = require("highlight.js");
-
-const extensions = [...defaultExtensions, slashCommand];
 
 const TailwindAdvancedEditor = () => {
   const [initialContent, setInitialContent] = useState<null | JSONContent>(
@@ -45,6 +45,18 @@ const TailwindAdvancedEditor = () => {
   const [openAI, setOpenAI] = useState(false);
 
   const [comments, setComments] = useState<Comment[]>([]);
+  const [activeCommentId, setActiveCommentId] = useState<null | string>(null);
+
+  const extensions = [
+    ...defaultExtensions,
+    slashCommand,
+    CommentExtension.configure({
+      HTMLAttributes: {
+        class: cx("bg-yellow-400 bg-opacity-50"),
+      },
+      onCommentActivated: setActiveCommentId,
+    }),
+  ];
 
   //Apply Codeblock Highlighting on the HTML from editor.getHTML()
   const highlightCodeblocks = (content: string) => {
@@ -99,7 +111,7 @@ const TailwindAdvancedEditor = () => {
       ...comments,
       {
         id: id,
-        content: "This is a comment",
+        content: "",
         createdAt: new Date().toISOString(),
       },
     ]);
@@ -208,7 +220,11 @@ const TailwindAdvancedEditor = () => {
           </EditorContent>
         </EditorRoot>
       </div>
-      <Comments comments={comments} updateComments={updateComment} />
+      <Comments
+        activeCommentId={activeCommentId}
+        comments={comments}
+        updateComments={updateComment}
+      />
     </div>
   );
 };

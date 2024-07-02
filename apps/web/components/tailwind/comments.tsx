@@ -1,7 +1,6 @@
-import useOnClickOutside from "@/hooks/use-on-click-outside";
-import { useCompletion } from "ai/react";
+import { formatDate } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
+import TextareaAutosize from "react-textarea-autosize";
 
 export type Comment = {
   id: string;
@@ -9,80 +8,80 @@ export type Comment = {
   createdAt: string;
 };
 
-type CommentDisplayProps = {
+interface CommentDisplayProps {
+  id: string;
   comment: Comment;
   onChange: (content: string) => void;
-};
+}
 
-const CommentDisplay = ({ comment, onChange }: CommentDisplayProps) => {
-  const ref = useRef<HTMLInputElement>(null);
+const CommentDisplay = ({ id, comment, onChange }: CommentDisplayProps) => {
+  const ref = useRef<HTMLTextAreaElement>(null);
   const [inputValue, setInputValue] = useState(comment.content);
-  const [editing, setEditing] = useState(false);
-
-  const { completion, complete, isLoading } = useCompletion({
-    // id: "novel",
-    api: "/api/generate",
-    onResponse: (response) => {
-      if (response.status === 429) {
-        toast.error("You have reached your request limit for the day.");
-        return;
-      }
-    },
-    onError: (e) => {
-      toast.error(e.message);
-    },
-  });
 
   useEffect(() => {
     onChange(inputValue);
   }, [inputValue]);
 
-  const startEditing = () => setEditing(true);
-  const stopEditing = () => setEditing(false);
-  useOnClickOutside(ref, stopEditing);
-
-  const hasCompletion = completion.length > 0;
-
-  useEffect(() => {
-    if (editing) {
-      ref.current?.focus();
-    }
-  }, [editing]);
-
   return (
-    <div className="p-4 h-auto relative border-muted bg-background sm:rounded-lg sm:border sm:shadow-sm">
-      {editing ? (
-        <input
-          ref={ref}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-        />
-      ) : (
-        <p onClick={startEditing} onKeyDown={stopEditing}>
-          {inputValue}
-        </p>
-      )}
-      <p>Created at: {comment.createdAt}</p>
+    <div className="p-2 h-auto relative border-muted bg-background sm:rounded-lg sm:border sm:shadow-sm">
+      <p className="px-2 text-sm text-neutral-500">
+        {formatDate(comment.createdAt)}
+      </p>
+      <TextareaAutosize
+        className="w-full py-1 px-2 resize-none bg-transparent break-words overflow-hidden"
+        id={id}
+        ref={ref}
+        rows={1}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+      />
     </div>
   );
 };
 
 type CommentsOptions = {
   comments: Comment[];
+  activeCommentId: string | null;
   updateComments: (id: string, content: string) => void;
 };
 
-const Comments = ({ comments, updateComments }: CommentsOptions) => {
+const Comments = ({
+  comments,
+  activeCommentId,
+  updateComments,
+}: CommentsOptions) => {
+  const ref = useRef<HTMLUListElement>(null);
+
+  const focusOnComment = (commentId: string) => {
+    if (commentId) {
+      const commentInput = ref.current?.querySelector<HTMLInputElement>(
+        `textarea#${commentId}`,
+      );
+      if (commentInput) {
+        commentInput.scrollIntoView({ behavior: "smooth", block: "center" });
+        commentInput.focus();
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (activeCommentId) {
+      focusOnComment(activeCommentId);
+    }
+  }, [activeCommentId]);
+
   return (
-    <div className="space-y-4 sticky top-0">
+    <ul className="space-y-4 sticky top-0" ref={ref}>
       {comments.map((comment) => (
-        <CommentDisplay
-          onChange={(content) => updateComments(comment.id, content)}
-          key={comment.id}
-          comment={comment}
-        />
+        <li key={comment.id}>
+          <CommentDisplay
+            id={comment.id}
+            onChange={(content) => updateComments(comment.id, content)}
+            comment={comment}
+          />
+        </li>
       ))}
-    </div>
+    </ul>
   );
 };
 
