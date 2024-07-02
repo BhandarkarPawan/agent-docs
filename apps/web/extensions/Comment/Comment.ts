@@ -6,27 +6,21 @@ declare module "@tiptap/core" {
       /**
        * Set a comment (add)
        */
-      setComment: (commentId: string) => ReturnType;
+      setComment: (attributes: { commentId: string }) => ReturnType;
+      /**
+       * Toggle a comment
+       */
+      toggleComment: (attributes: { commentId: string }) => ReturnType;
       /**
        * Unset a comment (remove)
        */
-      unsetComment: (commentId: string) => ReturnType;
-      /**
-       * Set comment as active
-       */
-      setActiveComment: (commentId: string) => ReturnType;
+      unsetComment: () => ReturnType;
     };
   }
 }
 
 const CommentExtension = Mark.create({
   name: "comment",
-
-  addOptions() {
-    return {
-      HTMLAttributes: {},
-    };
-  },
 
   renderHTML({ HTMLAttributes }) {
     return ["span", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes), 0];
@@ -38,20 +32,31 @@ const CommentExtension = Mark.create({
     };
   },
 
+  addAttributes() {
+    return {
+      commentId: {
+        default: null,
+      },
+    };
+  },
+
   addCommands() {
     return {
       setComment:
-        (commentId) =>
-        ({ commands }) => {
-          if (!commentId) return false;
-          console.log("set comment", commentId);
-          commands.setMark(this.name, { commentId });
+        (attributes) =>
+        ({ chain }) => {
+          console.log("adding comment with attributes", attributes);
+          return chain().setMark(this.name, attributes).run();
+        },
+      toggleComment:
+        (attributes) =>
+        ({ chain }) => {
+          return chain().toggleMark(this.name, attributes).run();
         },
       unsetComment:
-        (commentId) =>
-        ({ commands }) => {
-          if (!commentId) return false;
-          console.log("unset comment", commentId);
+        () =>
+        ({ chain }) => {
+          return chain().unsetMark(this.name).run();
         },
     };
   },

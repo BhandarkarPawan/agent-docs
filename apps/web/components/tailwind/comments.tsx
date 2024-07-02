@@ -74,7 +74,7 @@ type CommentsOptions = {
 
 const Comments = ({ comments, updateComments }: CommentsOptions) => {
   return (
-    <div className="space-y-4 sticky top-0 py-2 ">
+    <div className="space-y-4 sticky top-0">
       {comments.map((comment) => (
         <CommentDisplay
           onChange={(content) => updateComments(comment.id, content)}

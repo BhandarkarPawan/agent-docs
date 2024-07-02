@@ -13,7 +13,6 @@ import {
 import { ImageResizer, handleCommandNavigation } from "novel/extensions";
 import { useEffect, useState } from "react";
 import { useDebouncedCallback } from "use-debounce";
-import { v4 as uuidv4 } from "uuid";
 import { defaultExtensions } from "./extensions";
 import { ColorSelector } from "./selectors/color-selector";
 import { LinkSelector } from "./selectors/link-selector";
@@ -46,7 +45,6 @@ const TailwindAdvancedEditor = () => {
   const [openAI, setOpenAI] = useState(false);
 
   const [comments, setComments] = useState<Comment[]>([]);
-  const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
 
   //Apply Codeblock Highlighting on the HTML from editor.getHTML()
   const highlightCodeblocks = (content: string) => {
@@ -87,36 +85,44 @@ const TailwindAdvancedEditor = () => {
     else setComments([]);
   }, []);
 
+  useEffect(() => {
+    window.localStorage.setItem("comments", JSON.stringify(comments));
+  }, [comments]);
+
   if (!initialContent) return null;
 
-  const addComment = () => {
+  const addComment = (id: string) => {
     setComments([
       ...comments,
       {
-        id: uuidv4(),
+        id: id,
         content: "This is a comment",
         createdAt: new Date().toISOString(),
       },
     ]);
   };
 
-  const updateComments = (id: string, content: string) => {
-    const newComments = comments.map((comment) => {
-      if (comment.id === id) {
-        return {
-          ...comment,
-          content: content,
-        };
-      }
-      return comment;
-    });
-    setComments(newComments);
-    window.localStorage.setItem("comments", JSON.stringify(newComments));
+  const removeComment = (id: string) => {
+    setComments(comments.filter((comment) => comment.id !== id));
+  };
+
+  const updateComment = (id: string, content: string) => {
+    setComments(
+      comments.map((comment) => {
+        if (comment.id === id) {
+          return {
+            ...comment,
+            content: content,
+          };
+        }
+        return comment;
+      }),
+    );
   };
 
   return (
-    <div className="relative flex space-x-4 items-start">
-      <div className="relative w-full max-w-screen-lg">
+    <div className="flex w-full space-x-4">
+      <div className="relative grow max-w-screen-lg">
         <div className="flex absolute right-5 top-5 z-10 mb-5 gap-2">
           <div className="rounded-lg bg-accent px-2 py-1 text-sm text-muted-foreground">
             {saveStatus}
@@ -189,14 +195,17 @@ const TailwindAdvancedEditor = () => {
               <LinkSelector open={openLink} onOpenChange={setOpenLink} />
               <Separator orientation="vertical" />
               <TextButtons />
-              <CommentSelector onAddComment={addComment} />
+              <CommentSelector
+                onAddComment={addComment}
+                onRemoveComment={removeComment}
+              />
               <Separator orientation="vertical" />
               <ColorSelector open={openColor} onOpenChange={setOpenColor} />
             </GenerativeMenuSwitch>
           </EditorContent>
         </EditorRoot>
       </div>
-      <Comments comments={comments} updateComments={updateComments} />
+      <Comments comments={comments} updateComments={updateComment} />
     </div>
   );
 };

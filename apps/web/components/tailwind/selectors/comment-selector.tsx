@@ -2,24 +2,33 @@ import { Button } from "@/components/tailwind/ui/button";
 import { cn } from "@/lib/utils";
 import { MessageSquarePlus } from "lucide-react";
 import { EditorBubbleItem, type EditorInstance, useEditor } from "novel";
+import { v4 as uuidv4 } from "uuid";
 
 type CommentSelectorOptions = {
-  onAddComment: () => void;
+  onAddComment: (id: string) => void;
+  onRemoveComment: (id: string) => void;
 };
 
-const CommentSelector = ({ onAddComment }: CommentSelectorOptions) => {
+const CommentSelector = ({
+  onAddComment,
+  onRemoveComment,
+}: CommentSelectorOptions) => {
   const { editor } = useEditor();
 
-  const addComment = (editor: EditorInstance) => {
-    const commentId = Math.random().toString(36).substring(2);
-    console.log("Adds comment with id: ", commentId);
-    console.log("editor: ", editor.chain().focus());
-    editor.chain().focus().setComment(commentId).run();
-    onAddComment();
+  const toggleComment = (editor: EditorInstance) => {
+    if (editor.isActive("comment")) {
+      const commentId = editor.getAttributes("comment").commentId;
+      editor.chain().focus().unsetComment().run();
+      onRemoveComment(commentId);
+    } else {
+      const commentId = uuidv4();
+      editor.chain().focus().setComment({ commentId }).run();
+      onAddComment(commentId);
+    }
   };
 
   return (
-    <EditorBubbleItem onSelect={addComment}>
+    <EditorBubbleItem onSelect={toggleComment}>
       <Button size="sm" className="rounded-none" variant="ghost">
         <MessageSquarePlus
           className={cn("h-4 w-4", {
